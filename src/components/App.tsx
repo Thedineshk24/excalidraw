@@ -1276,18 +1276,18 @@ class App extends React.Component<AppProps, AppState> {
     this.scene.addCallback(this.onSceneUpdated);
     this.addEventListeners();
 
-    if (this.props.autoFocus && this.excalidrawContainerRef.current) {
+    if (this.props.autoFocus && this.excalidrawContainerRef?.current) {
       this.focusContainer();
     }
 
     if (
-      this.excalidrawContainerRef.current &&
+      this.excalidrawContainerRef?.current &&
       // bounding rects don't work in tests so updating
       // the state on init would result in making the test enviro run
       // in mobile breakpoint (0 width/height), making everything fail
       process.env.NODE_ENV !== "test"
     ) {
-      this.refreshDeviceState(this.excalidrawContainerRef.current);
+      this.refreshDeviceState(this.excalidrawContainerRef?.current);
     }
 
     if ("ResizeObserver" in window && this.excalidrawContainerRef?.current) {
@@ -1295,12 +1295,12 @@ class App extends React.Component<AppProps, AppState> {
         THROTTLE_NEXT_RENDER = false;
         // recompute device dimensions state
         // ---------------------------------------------------------------------
-        this.refreshDeviceState(this.excalidrawContainerRef.current!);
+        this.refreshDeviceState(this.excalidrawContainerRef?.current!);
         // refresh offsets
         // ---------------------------------------------------------------------
         this.updateDOMRect();
       });
-      this.resizeObserver?.observe(this.excalidrawContainerRef.current);
+      this.resizeObserver?.observe(this.excalidrawContainerRef?.current);
     } else if (window.matchMedia) {
       const mdScreenQuery = window.matchMedia(
         `(max-width: ${MQ_MAX_WIDTH_PORTRAIT}px), (max-height: ${MQ_MAX_HEIGHT_LANDSCAPE}px) and (max-width: ${MQ_MAX_WIDTH_LANDSCAPE}px)`,
@@ -1318,7 +1318,7 @@ class App extends React.Component<AppProps, AppState> {
         }px)`,
       );
       const handler = () => {
-        this.excalidrawContainerRef.current!.getBoundingClientRect();
+        this.excalidrawContainerRef?.current!.getBoundingClientRect();
         this.device = updateObject(this.device, {
           isSmScreen: smScreenQuery.matches,
           isMobile: mdScreenQuery.matches,
@@ -1419,7 +1419,159 @@ class App extends React.Component<AppProps, AppState> {
     this.detachIsMobileMqHandler?.();
   }
 
+  // handleKeyPress = (event: any) => {
+  //   if ((event.ctrlKey || event.metaKey) && event.key === 'f') {
+  //     event.preventDefault();
+  //     console.log('Search triggered!');
+  //     const searchTerm = prompt('Enter search term:') || '';
+
+  //     const canvasContainer = document.querySelector('.excalidraw__canvas');
+  //     if (!canvasContainer) return;
+
+  //     const textElements = document.querySelectorAll('.canvas-text');
+  //     console.log("textElements",textElements)
+
+  //     if (!textElements) return;
+
+  //     let foundIndex = -1;
+
+  //     textElements.forEach((element: any, index: number) => {
+  //       const text = element.innerText.toLowerCase();
+  //       if (text.includes(searchTerm.toLowerCase())) {
+  //         foundIndex = index;
+  //         return;
+  //       }
+  //     });
+
+  //     if (foundIndex >= 0) {
+  //       const lineHeight = 20; // Adjust this based on your font size
+
+  //       const scrollToY = foundIndex * lineHeight;
+  //       window.scrollTo(0, scrollToY);
+  //     }
+  //   }
+  // };
+
+  // handleKeyPress = (event: any) => {
+  //   if ((event.ctrlKey || event.metaKey) && event.key === 'f') {
+  //     event.preventDefault();
+  //     console.log('Search triggered!');
+  //     const searchTerm = prompt('Enter search term:') || '';
+
+  //     const canvas = document.querySelector(".excalidraw__canvas") as HTMLCanvasElement;
+  //     if (!canvas) return;
+
+  //     console.log("canvas")
+  //     const ctx = canvas.getContext('2d');
+  //     if (!ctx) return;
+  //     console.log("ctx");
+
+  //     // @ts-ignore
+  //     const elements = this.scene.elements;
+  //     if (!elements) return;
+  //     console.log("elements")
+
+  //     let foundIndex = -1;
+
+  //     elements.forEach((element: any, index: number) => {
+  //       if (element.type === 'text' && element.text.includes(searchTerm)) {
+  //         foundIndex = index;
+  //         return;
+  //       }
+  //     });
+
+  //     if (foundIndex >= 0) {
+  //       const lineHeight = 20; // Adjust this based on your font size
+  //       const padding = 10; // Adjust this to provide padding around the found element
+
+  //       const y = foundIndex * lineHeight + padding;
+  //       const canvasHeight = canvas.height;
+
+  //       if (y < canvasHeight) {
+  //         // Scroll to the element if it's within the visible canvas area
+  //         canvas.scrollTo(0, y);
+  //       } else {
+  //         // Adjust the scroll position based on the element's position relative to the canvas
+  //         const scrollY = y - canvasHeight + lineHeight;
+  //         // window.scrollTo(0, scrollY);
+  //       }
+  //     }
+  //   }
+  // };
+
+  handleKeyPress = (event: any) => {
+    if ((event.ctrlKey || event.metaKey) && event.key === "f") {
+      event.preventDefault();
+      console.log("Search triggered!");
+      const searchTerm = prompt("Enter search term:") || "";
+
+      const canvas = document.querySelector(".excalidraw__canvas") as any;
+      if (!canvas) return;
+      // @ts-ignore
+      const elements = this.scene.elements;
+      if (!elements) return;
+
+      let foundIndex = -1;
+
+      elements.forEach((element: any, index: number) => {
+        if (element.type === "text" && element.text.includes(searchTerm)) {
+          foundIndex = index;
+          return;
+        }
+      });
+
+      if (foundIndex >= 0) {
+        const lineHeight = 20; // Adjust this based on your font size
+        const padding = 10; // Adjust this to provide padding around the found element
+
+        const y = foundIndex * lineHeight + padding;
+
+        if (foundIndex >= 0) {
+          const lineHeight = 20; // Adjust this based on your font size
+          const padding = 10; // Adjust this to provide padding around the found element
+
+          const y = foundIndex * lineHeight + padding;
+
+          this.setState(
+            (prevState) => {
+              const { scrollX, scrollY, width, height } = prevState;
+
+              const viewportX = width / 2 - scrollX;
+              const viewportY = y + lineHeight / 2 - scrollY;
+
+              return {
+                scrollX: viewportX - width / 2,
+                scrollY: viewportY - height / 2,
+              };
+            },
+            () => {
+              requestAnimationFrame(() => {
+                const canvas = document.querySelector(
+                  ".excalidraw__canvas",
+                ) as any;
+                const container = canvas.parentElement;
+                if (container) {
+                  const { scrollX, scrollY, width, height } = this.state;
+
+                  const viewportX = width / 2 - scrollX;
+                  const viewportY = height / 2 - scrollY;
+
+                  container.scrollTo({
+                    left: viewportX - container.offsetWidth / 2,
+                    top: viewportY - container.offsetHeight / 2,
+                    behavior: "smooth", // Optionally, use 'auto' for instant scroll without animation
+                  });
+                }
+              });
+            },
+          );
+        }
+      }
+    }
+  };
+
   private addEventListeners() {
+    document.addEventListener("keydown", this?.handleKeyPress);
     this.removeEventListeners();
     document.addEventListener(EVENT.POINTER_UP, this.removePointer); // #3553
     document.addEventListener(EVENT.COPY, this.onCopy);
@@ -1498,11 +1650,11 @@ class App extends React.Component<AppProps, AppState> {
     }
 
     if (
-      this.excalidrawContainerRef.current &&
+      this.excalidrawContainerRef?.current &&
       prevProps.UIOptions.dockedSidebarBreakpoint !==
         this.props.UIOptions.dockedSidebarBreakpoint
     ) {
-      this.refreshDeviceState(this.excalidrawContainerRef.current);
+      this.refreshDeviceState(this.excalidrawContainerRef?.current);
     }
 
     if (
@@ -1567,7 +1719,7 @@ class App extends React.Component<AppProps, AppState> {
       });
     }
 
-    this.excalidrawContainerRef.current?.classList.toggle(
+    this.excalidrawContainerRef?.current?.classList.toggle(
       "theme--dark",
       this.state.theme === "dark",
     );
@@ -1759,7 +1911,7 @@ class App extends React.Component<AppProps, AppState> {
   // Copy/paste
 
   private onCut = withBatchedUpdates((event: ClipboardEvent) => {
-    const isExcalidrawActive = this.excalidrawContainerRef.current?.contains(
+    const isExcalidrawActive = this.excalidrawContainerRef?.current?.contains(
       document.activeElement,
     );
     if (!isExcalidrawActive || isWritableElement(event.target)) {
@@ -1771,7 +1923,7 @@ class App extends React.Component<AppProps, AppState> {
   });
 
   private onCopy = withBatchedUpdates((event: ClipboardEvent) => {
-    const isExcalidrawActive = this.excalidrawContainerRef.current?.contains(
+    const isExcalidrawActive = this.excalidrawContainerRef?.current?.contains(
       document.activeElement,
     );
     if (!isExcalidrawActive || isWritableElement(event.target)) {
@@ -2923,7 +3075,7 @@ class App extends React.Component<AppProps, AppState> {
         this.focusContainer();
       }),
       element,
-      excalidrawContainer: this.excalidrawContainerRef.current,
+      excalidrawContainer: this.excalidrawContainerRef?.current,
       app: this,
     });
     // deselect all other elements when inserting text
@@ -6969,7 +7121,7 @@ class App extends React.Component<AppProps, AppState> {
 
     const type = element || isHittignCommonBoundBox ? "element" : "canvas";
 
-    const container = this.excalidrawContainerRef.current!;
+    const container = this.excalidrawContainerRef?.current!;
     const { top: offsetTop, left: offsetLeft } =
       container.getBoundingClientRect();
     const left = event.clientX - offsetLeft;
@@ -7396,7 +7548,7 @@ class App extends React.Component<AppProps, AppState> {
 
   private updateDOMRect = (cb?: () => void) => {
     if (this.excalidrawContainerRef?.current) {
-      const excalidrawContainer = this.excalidrawContainerRef.current;
+      const excalidrawContainer = this.excalidrawContainerRef?.current;
       const {
         width,
         height,
@@ -7442,7 +7594,7 @@ class App extends React.Component<AppProps, AppState> {
 
   private getCanvasOffsets(): Pick<AppState, "offsetTop" | "offsetLeft"> {
     if (this.excalidrawContainerRef?.current) {
-      const excalidrawContainer = this.excalidrawContainerRef.current;
+      const excalidrawContainer = this.excalidrawContainerRef?.current;
       const { left, top } = excalidrawContainer.getBoundingClientRect();
       return {
         offsetLeft: left,
